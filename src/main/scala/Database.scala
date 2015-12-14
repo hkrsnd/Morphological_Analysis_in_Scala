@@ -6,7 +6,6 @@ import slick.jdbc.GetResult
 import slick.jdbc.JdbcBackend.Database;
 import org.sqlite.JDBC
 
-
 object DB {
   //val db = Database.forURL("jdbc:sqlite:searchindex.db", driver = "org.sqlite.JDBC")
   val db = Database.forConfig("db")
@@ -36,4 +35,7 @@ object DB {
 
   def existSameTweet(tweetid: Long): Future[Boolean] =
     db.run(words.filter(_.tweetid === tweetid).exists.result)
+
+  def getAllWords(): Future[Seq[Word]] =
+    db.run(words.result)
 }
