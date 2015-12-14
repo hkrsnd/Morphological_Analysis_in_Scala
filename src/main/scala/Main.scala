@@ -34,7 +34,7 @@ object TweetResearch {
       t <- tokens
     } yield {
       val token = t.asInstanceOf[Token]
-      Word(token.getSurfaceForm, token.getPartOfSpeech, 1)
+      Word(token.getSurfaceForm, token.getPartOfSpeech, 1, st.getId)
     }
   }
 
@@ -46,13 +46,19 @@ object TweetResearch {
      // 自分のタイムライン取得
      val statuses = getMyTimeline()
      // 各テキストを解析してリストでまとめる
-     val wordslist = statuses.map(st => tweetAnalize(st)).toList
+     // val wordslist = statuses.map(st => tweetAnalize(st)).toList
+     val wordslist = for (st <- statuses) yield {
+       if(Await.result(DB.existSameTweet(st.getId), Duration.Inf))
+         List()
+       else
+         tweetAnalize(st)
+     }.toList
      // 結果をデータベースに格納
      val futureCount = for {
        words <- wordslist
        word <-words
      } yield {
-       val count = Await.result(DB.getSameWords(word), Duration.Inf).length
+       val count = Await.result(DB.getSameWordCount(word), Duration.Inf).getOrElse(-1)
        if(count <= 0) {
          Await.result(DB.insertWord(word), Duration.Inf)
        } else {
